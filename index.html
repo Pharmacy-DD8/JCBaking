@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cake Pricing Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>JC Baking Price Calculator</h1>
+        <p>Select your ingredients and calculate the cost!</p>
+    </header>
+
+    <section id="ingredients-container">
+        <div class="ingredient" data-ingredient="flour">
+            <img src="images/flour.png" alt="Flour">
+            <button class="calculate-cost">Calculate Cost</button>
+        </div>
+        <div class="ingredient" data-ingredient="sugar">
+            <img src="images/sugar.png" alt="Sugar">
+            <button class="calculate-cost">Calculate Cost</button>
+        </div>
+        <div class="ingredient" data-ingredient="butter">
+            <img src="images/butter.png" alt="Butter">
+            <button class="calculate-cost">Calculate Cost</button>
+        </div>
+        <div class="ingredient" data-ingredient="eggs">
+            <img src="images/eggs.png" alt="Eggs">
+            <button class="calculate-cost">Calculate Cost</button>
+        </div>
+        <div class="ingredient" data-ingredient="milk">
+            <img src="images/milk.png" alt="Milk">
+            <button class="calculate-cost">Calculate Cost</button>
+        </div>
+        <div class="ingredient" data-ingredient="vanilla_extract">
+            <img src="images/vanilla_extract.png" alt="Vanilla_extract">
+            <button class="calculate-cost">Calculate Cost</button>
+        </div>
+        <!-- Add more ingredients as needed -->
+    </section>
+
+    <section id="dialogs-container"></section>
+
+    <section id="total-cost">
+        <h2>Total Cost: $<span id="total">0.00</span></h2>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 Cake Pricing Calculator</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
