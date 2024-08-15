@@ -1,9 +1,15 @@
 let totalCost = 0;
-let currentDialogCost = 0;
+let ingredientCosts = {}; // Object to store the cost of each ingredient
 
 document.querySelectorAll('.calculate-cost').forEach(button => {
     button.addEventListener('click', function() {
         const ingredient = this.closest('.ingredient').dataset.ingredient;
+        
+        // Skip Oil and Corn Syrup for now
+        if (ingredient === 'Oil' || ingredient === 'Corn Syrup') {
+            return;
+        }
+
         createDialog(ingredient);
     });
 });
@@ -22,23 +28,13 @@ function createDialog(ingredient) {
     dialog.classList.add('dialog');
     dialog.dataset.ingredient = ingredient;
 
-    // Determine if the ingredient requires special handling
-    const isSpecialIngredient = ingredient === 'Oil' || ingredient === 'Corn Syrup';
-    const costLabel = isSpecialIngredient ? 'per Oz' : 'per Lb'; // Capitalized 'Lb' without $ sign
-    const unitOptions = isSpecialIngredient
-        ? `<option value="oz">Ounce (oz)</option>
-           <option value="tsp">Teaspoon (tsp)</option>
-           <option value="tbsp">Tablespoon (tbsp)</option>`
-        : `<option value="lb">Pound (lb)</option>
-           <option value="g">Gram (g)</option>`;
-
     dialog.innerHTML = `
         <div class="dialog-content">
             <h2>Calculate Cost for ${ingredient}</h2>
             
             <div class="input-row">
-                <label for="initial-cost-${ingredient}">Initial Cost (${costLabel}):</label>
-                <input type="number" id="initial-cost-${ingredient}" name="initial-cost" min="0" step="0.01" placeholder="Enter cost" required>
+                <label for="initial-cost-${ingredient}">Initial Cost (per Lb):</label>
+                <input type="number" id="initial-cost-${ingredient}" name="initial-cost" min="0" step="0.01" placeholder="Enter cost per Lb" required>
             </div>
             
             <div class="input-row">
@@ -46,7 +42,8 @@ function createDialog(ingredient) {
                 <input type="number" id="quantity-${ingredient}" name="quantity" min="0" step="0.01" placeholder="Enter quantity" required>
                 <label for="unit-${ingredient}">Unit:</label>
                 <select id="unit-${ingredient}">
-                    ${unitOptions}
+                    <option value="lb">Pound (lb)</option>
+                    <option value="g">Gram (g)</option>
                 </select>
             </div>
             
@@ -64,60 +61,43 @@ function createDialog(ingredient) {
         const quantity = parseFloat(dialog.querySelector(`#quantity-${ingredient}`).value);
         const unit = dialog.querySelector(`#unit-${ingredient}`).value;
 
-        const cost = calculateCost(quantity, unit, initialCost, isSpecialIngredient);
-        dialog.querySelector('.cost-result').innerText = `Cost: $${cost.toFixed(2)}`;
-        
-        // Update total cost and store the current dialog cost
-        if (currentDialogCost > 0) {
-            updateTotalCost(-currentDialogCost); // Subtract previous cost if it exists
+        const cost = calculateCost(quantity, unit, initialCost);
+
+        // Update the total cost by removing the previous cost of this ingredient, if any
+        if (ingredientCosts[ingredient]) {
+            totalCost -= ingredientCosts[ingredient];
         }
-        currentDialogCost = cost; // Store current cost
-        updateTotalCost(cost);
+
+        ingredientCosts[ingredient] = cost; // Store the new cost for this ingredient
+        totalCost += cost; // Add the new cost to the total
+
+        dialog.querySelector('.cost-result').innerText = `Cost: $${cost.toFixed(2)}`;
+        updateTotalCost();
     });
 
     dialog.querySelector('.close-dialog').addEventListener('click', function() {
         // Subtract the cost of the dialog when it's closed
-        updateTotalCost(-currentDialogCost);
-        currentDialogCost = 0; // Reset the current dialog cost
+        if (ingredientCosts[ingredient]) {
+            totalCost -= ingredientCosts[ingredient];
+            delete ingredientCosts[ingredient]; // Remove the ingredient from the cost tracking
+        }
+        updateTotalCost();
         dialog.remove();
     });
 
     dialogContainer.prepend(dialog); // Add new dialogs above the existing ones
 }
 
-function calculateCost(quantity, unit, initialCost, isSpecialIngredient) {
-    // Conversion factors
-    const conversionFactors = {
-        "tsp": 1 / 768,  // Teaspoons in a gallon
-        "tbsp": 1 / 256, // Tablespoons in a gallon
-        "cup": 1 / 16,   // Cups in a gallon
-        "pt": 1 / 8,     // Pints in a gallon
-        "qt": 1 / 4,     // Quarts in a gallon
-        "gal": 1,        // Gallon
-        "oz": 1,         // Ounce
-        "lb": 1,         // Pound
-        "g": 0.00220462  // Grams to Pounds
-    };
-
-    let quantityInBaseUnit;
-
-    if (isSpecialIngredient) {
-        // For special ingredients like oil and corn syrup
-        quantityInBaseUnit = quantity * conversionFactors[unit]; // Convert to base unit
-    } else {
-        // For non-special ingredients like sugar
-        quantityInBaseUnit = unit === 'g'
-            ? quantity * conversionFactors[unit] // Convert grams to pounds
-            : quantity; // Quantity in pounds
+function calculateCost(quantity, unit, initialCost) {
+    let cost = 0;
+    if (unit === 'lb') {
+        cost = quantity * initialCost;
+    } else if (unit === 'g') {
+        cost = (quantity / 453.6) * initialCost; // Convert grams to pounds and calculate
     }
-
-    // Calculate the total cost
-    const totalCost = quantityInBaseUnit * initialCost;
-
-    return totalCost;
+    return cost;
 }
 
-function updateTotalCost(cost) {
-    totalCost += cost;
+function updateTotalCost() {
     document.getElementById('total').innerText = totalCost.toFixed(2);
 }
